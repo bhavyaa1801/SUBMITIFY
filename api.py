@@ -39,6 +39,8 @@ app.add_middleware(
 os.makedirs("generated", exist_ok=True)
 app.mount("/files", StaticFiles(directory="generated"), name="files")
 
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter

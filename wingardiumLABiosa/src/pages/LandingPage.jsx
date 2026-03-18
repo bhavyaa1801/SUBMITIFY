@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import FloatingCode from "../components/Floatingcode";
 import CursorEffect from "../components/CursorEffect";
 
-const SAMPLE_PDF_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:8000") + "/files/sample.pdf";
+const SAMPLE_PDF_URL = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/static/sample.pdf`;
 
 const FEATURES = ["cover_page", "index", "aim", "algorithm", "source_code", "output"];
 
