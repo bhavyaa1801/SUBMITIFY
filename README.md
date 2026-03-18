@@ -1,14 +1,10 @@
 # SUBMITIFY — AI-Powered Lab File Generator
-
-<img width="692" height="489" alt="image" src="https://github.com/user-attachments/assets/4311c9e5-995e-49c8-9fc5-382a656e0a67" />
-
 > Generate complete, print-ready programming practical files in seconds using Groq AI.
 
 Enter your college details and experiment list. SUBMITIFY writes the cover page, index,
 algorithms, source code, and output — formatted and ready to download as PDF and Word.
 
 **Live:** [submitify-pi.vercel.app](https://submitify-pi.vercel.app)
-
 ---
 
 ## How it works
@@ -18,6 +14,8 @@ algorithms, source code, and output — formatted and ready to download as PDF a
 3. SUBMITIFY calls Groq AI (LLaMA 3.3 70B) to generate aim, algorithm, code, and output
 4. Previously generated experiments are served instantly from the PostgreSQL cache
 5. Download a formatted A4 PDF or Word file — cover page, index, and all experiments included
+
+<img width="692" height="489" alt="image" src="https://github.com/user-attachments/assets/4311c9e5-995e-49c8-9fc5-382a656e0a67" />
 
 ---
 
