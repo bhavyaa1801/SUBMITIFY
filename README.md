@@ -159,13 +159,3 @@ Open [http://localhost:3000](http://localhost:3000)
 | Database | Supabase | Use the connection string as `DB_*` env vars |
 
 ---
-
-## Contributing
-
-PRs welcome. Open an issue first for anything beyond small fixes.
-
----
-
-## License
-
-MIT
