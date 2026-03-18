@@ -1,0 +1,140 @@
+body{
+    font-family: "Times New Roman", Times, serif;
+    margin: 40px;
+}
+@page {
+  margin: 20mm 15mm 20mm 15mm;
+  border: 2px solid #000000;
+}
+/* COVER PAGE */
+
+.cover{
+    text-align:center;
+    margin-top:110px;
+    page-break-after: always;
+}
+
+.university{
+    font-size:28px;
+    margin-bottom:30px;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.logo{
+    width:120px;
+    display:block;
+    margin:20px auto;
+}
+
+.year{
+    margin-top:10px;
+    font-size:22px;
+}
+
+.department {
+    margin-bottom: 8px;   
+    font-size: 22px;
+}
+
+.subject {
+    margin-top: 8px;     
+    font-size: 24px;
+}
+
+.submission-table{
+    width:100%;
+    margin-top:120px;
+}
+
+.submission-table td{
+    width:50%;
+    vertical-align:top;
+    font-size:21px;
+}
+
+.left{
+    text-align:left;
+}
+
+.right{
+    text-align:right;
+}
+
+
+/* INDEX PAGE */
+
+.index{
+    page-break-after:always;
+}
+
+/* INDEX PAGE */
+
+.index{
+    page-break-after:always;
+}
+
+.index table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+
+.index th,
+.index td{
+    border:1px solid black;
+    padding:10px;
+    text-align:left;
+    font-size:18px;
+}
+
+.index th{
+    background:#f0f0f0;
+}
+
+
+/* EXPERIMENT PAGES */
+
+.experiment{
+    page-break-after:always;
+}
+
+.experiment h2{
+    margin-top:20px;
+}
+
+.code{
+    font-family: 'Times New Roman', Times, serif;
+    background:#ffffff;
+    padding:10px;
+    white-space:pre-wrap;
+    font-size:16px;
+    overflow-x: auto;
+}
+
+/* ALGORITHM FONT */
+
+.algorithm{
+    font-family: "Times New Roman", Times, serif;
+    font-size:20px;
+    line-height:1;
+}
+
+
+/* PROGRAM FONT */
+
+.program{
+    font-family: 'Times New Roman', Times, serif;
+    font-size:20px;
+    background:#ffffff;
+    padding:8px;
+}
+
+
+/* OUTPUT FONT */
+
+.output{
+    font-family: 'Times New Roman', Times, serif;
+    font-size:20px;
+    padding:7px;
+}

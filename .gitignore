@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Frontend
+wingardiumLABiosa/node_modules
+wingardiumLABiosa/dist
+wingardiumLABiosa/dist-ssr
+wingardiumLABiosa/.env
+
+# Backend
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+generated/
+.env
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.local
+
+# OS
+Thumbs.db
+
+# Misc
+node_modules
+dist

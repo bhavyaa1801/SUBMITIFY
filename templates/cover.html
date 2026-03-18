@@ -1,0 +1,39 @@
+<div class="cover" style="padding-top: 10mm;">
+  <h1 class="university">{{ project.university }}</h1>
+
+
+  {% if project.logo %}
+    <img src="{{ project.logo }}" class="logo" style="height: 200px;width: 200px ;margin: 12px auto; display: block;">
+  {% else %}
+    <img src="assets/logo.png" class="logo">
+  {% endif %}
+
+  <p class="year">Academic Year: {{ project.year }}</p>
+
+  <p class="department">{{ project.department }}</p>
+
+  <h2 class="subject">{{ project.subject }}</h2>
+
+  <h2>Practical File</h2>
+
+  <p style="font-size: 20px;">(Subject Code: {{ project.code }})</p>
+
+  <table class="submission-table">
+    <tr>
+      <td class="left">
+        <b>Submitted to :</b><br>
+        {{ project.submitted_to }}<br>
+        {{ project.designation }}<br>
+        {{ project.department }}
+      </td>
+      <td class="right">
+        <b>Submitted by :</b><br>
+        {{ project.student }}<br>
+        Enrollment No: {{ project.roll }}<br>
+        Course: {{ project.course }}<br>
+        Semester: {{ project.semester }}
+      </td>
+    </tr>
+  </table>
+
+</div>
