@@ -130,7 +130,7 @@ a:hover { color: var(--text); }
   min-height: 620px;
   display: flex;
   align-items: center;
-  padding: 80px 40px 60px;
+  padding: 80px 0px 60px;
   overflow: hidden;
 }
 

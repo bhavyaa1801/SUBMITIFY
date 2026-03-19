@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 const CODE_CHARS = [
   "{", "}"," AUR KRO PROCASTINATE", "(", ")", "[", "]", "<", ">", "/", "=", " kyu nai ban rhe assingments",
-  ";", ":", ".", "=>", "++", "&&", "JAB TUM OR TUMHARE BEECH PHONE AA JAYE", "AREYYYYYYY YAAARRRRR","||", "!=", "==",
+  ";", ":", ".", "=>", "++", "&&", "AREYYYYYYY YAAARRRRR","||", "!=", "==",
   "def", "for", "if", "pdf", "req", "res", "DATA KHTM KHEL KHTM","fn()",
 ];
 

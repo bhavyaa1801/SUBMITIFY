@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FloatingCode from "../components/Floatingcode";
 import CursorEffect from "../components/CursorEffect";
+import AppMockup from "../components/AppMockup";
 
 const SAMPLE_PDF_URL = "/sample.pdf";
 const FEATURES = ["cover_page", "index", "aim", "algorithm", "source_code", "output"];
@@ -27,21 +28,29 @@ export default function LandingPage() {
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (!showSample || pdfBlobUrl) return;
     setPdfLoading(true);
     setPdfError(false);
     fetch(SAMPLE_PDF_URL)
-      .then(function(r) {
+      .then(function (r) {
         if (!r.ok) throw new Error("Failed");
         return r.blob();
       })
-      .then(function(blob) {
+      .then(function (blob) {
         setPdfBlobUrl(URL.createObjectURL(blob));
         setPdfLoading(false);
       })
-      .catch(function() {
+      .catch(function () {
         setPdfError(true);
         setPdfLoading(false);
       });
@@ -52,7 +61,7 @@ export default function LandingPage() {
       if (e.key === "Escape") setShowSample(false);
     }
     window.addEventListener("keydown", handler);
-    return function() { window.removeEventListener("keydown", handler); };
+    return function () { window.removeEventListener("keydown", handler); };
   }, []);
 
   return (
@@ -60,9 +69,10 @@ export default function LandingPage() {
       <CursorEffect />
       <FloatingCode />
 
+      {/* ── SAMPLE PDF MODAL ─────────────────────────── */}
       {showSample && (
         <div
-          onClick={function() { setShowSample(false); }}
+          onClick={function () { setShowSample(false); }}
           style={{
             position: "fixed",
             inset: 0,
@@ -75,7 +85,7 @@ export default function LandingPage() {
           }}
         >
           <div
-            onClick={function(e) { e.stopPropagation(); }}
+            onClick={function (e) { e.stopPropagation(); }}
             style={{
               width: "min(780px, 92vw)",
               height: "88vh",
@@ -87,37 +97,33 @@ export default function LandingPage() {
               overflow: "hidden",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
-                flexShrink: 0,
-              }}
-            >
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "14px 20px",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              flexShrink: 0,
+            }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "1rem" }}>📄</span>
                 <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.95rem" }}>
                   Sample Lab File
                 </span>
-                <span
-                  style={{
-                    background: "rgba(74,222,128,0.12)",
-                    border: "1px solid rgba(74,222,128,0.3)",
-                    color: "#4ade80",
-                    borderRadius: 999,
-                    padding: "2px 10px",
-                    fontSize: "0.72rem",
-                    fontWeight: 600,
-                  }}
-                >
+                <span style={{
+                  background: "rgba(74,222,128,0.12)",
+                  border: "1px solid rgba(74,222,128,0.3)",
+                  color: "#4ade80",
+                  borderRadius: 999,
+                  padding: "2px 10px",
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                }}>
                   PREVIEW
                 </span>
               </div>
               <button
-                onClick={function() { setShowSample(false); }}
+                onClick={function () { setShowSample(false); }}
                 style={{
                   background: "rgba(255,255,255,0.07)",
                   border: "1px solid rgba(255,255,255,0.12)",
@@ -138,69 +144,85 @@ export default function LandingPage() {
 
             <div style={{ flex: 1, overflow: "hidden" }}>
               {pdfLoading && (
-                <div
-                  style={{
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#666",
-                    fontSize: "0.9rem",
-                    gap: 10,
-                  }}
-                >
+                <div style={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#666",
+                  fontSize: "0.9rem",
+                }}>
                   Loading sample...
                 </div>
               )}
 
               {pdfError && (
-                <div
-                  style={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 12,
-                  }}
-                >
-                  <span style={{ color: "#f87171", fontSize: "0.9rem" }}>
-                    Could not load preview
-                  </span>
-                  <a
-                    href={SAMPLE_PDF_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#60a5fa", fontSize: "0.85rem" }}
-                  >
+                <div style={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                }}>
+                  <span style={{ color: "#f87171", fontSize: "0.9rem" }}>Could not load preview</span>
+                  <a href={SAMPLE_PDF_URL} target="_blank" rel="noreferrer" style={{ color: "#60a5fa", fontSize: "0.85rem" }}>
                     Open in new tab
                   </a>
                 </div>
               )}
 
               {!pdfLoading && !pdfError && pdfBlobUrl && (
-                <iframe
-                  src={pdfBlobUrl}
-                  title="Sample PDF"
-                  style={{
-                    width: "100%",
+                isMobile ? (
+                  <div style={{
                     height: "100%",
-                    border: "0",
-                  }}
-                />
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
+                    padding: 24,
+                  }}>
+                    <span style={{ fontSize: "3rem" }}>📄</span>
+                    <p style={{ color: "#aaa", textAlign: "center", fontSize: "0.9rem" }}>
+                      PDF preview not available on mobile
+                    </p>
+                    <a
+                      href={SAMPLE_PDF_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        padding: "12px 24px",
+                        background: "rgba(96,165,250,0.1)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 8,
+                        fontSize: "0.95rem",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Open PDF in Browser
+                    </a>
+                  </div>
+                ) : (
+                  <iframe
+                    src={pdfBlobUrl}
+                    title="Sample PDF"
+                    style={{ width: "100%", height: "100%", border: "0" }}
+                  />
+                )
               )}
             </div>
 
-            <div
-              style={{
-                padding: "12px 20px",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                display: "flex",
-                gap: 10,
-                justifyContent: "flex-end",
-                flexShrink: 0,
-              }}
-            >
+            <div style={{
+              padding: "12px 20px",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              gap: 10,
+              justifyContent: "flex-end",
+              flexShrink: 0,
+            }}>
               <a
                 href={SAMPLE_PDF_URL}
                 download="sample_lab_file.pdf"
@@ -220,7 +242,7 @@ export default function LandingPage() {
               </a>
               <button
                 className="btn-primary-lg"
-                onClick={function() { setShowSample(false); navigate("/create"); }}
+                onClick={function () { setShowSample(false); navigate("/create"); }}
                 style={{ padding: "8px 18px", fontSize: "0.85rem" }}
               >
                 Generate mine
@@ -230,47 +252,77 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* ── HERO ─────────────────────────────────────── */}
       <section className="lp-hero">
-        <div className="lp-hero-content">
-          <div className="lp-tags">
-            <span className="lp-tag">● Groq AI</span>
-            <span className="lp-tag">● FastAPI</span>
-            <span className="lp-tag">● PostgreSQL</span>
-          </div>
-          <h1 className="lp-headline">
-            Generate your <span className="lp-headline-accent">ASSIGNMENTS</span>
-            <br />
-            in seconds.
-          </h1>
-          <p className="lp-subtext">
-            Enter your college details and experiment list. We write the cover
-            page, index, algorithms, source code, and output - formatted and
-            print-ready.(For all colleges)
-          </p>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 40,
+          width: "100%",
+          padding: "0 60px 0 80px",
+          flexWrap: "wrap",
+          justifyContent: "flex-start",
+        }}>
 
-          <div className="lp-feature-tags">
-            {FEATURES.map(function(f) {
-              return <span key={f} className="lp-feature-tag">{f}</span>;
-            })}
+          {/* LEFT — hero content */}
+          <div className="lp-hero-content" style={{
+            flex: "0 1 420px",
+            textAlign: "left",
+            alignItems: "flex-start"
+          }}>
+            <div className="lp-tags">
+              <span className="lp-tag">● Groq AI</span>
+              <span className="lp-tag">● FastAPI</span>
+              <span className="lp-tag">● PostgreSQL</span>
+            </div>
+            <h1 className="lp-headline">
+              Generate your <span className="lp-headline-accent">ASSIGNMENTS</span>
+              <br />in seconds.
+            </h1>
+            <p className="lp-subtext">
+              Enter your college details and experiment list. We write the cover
+              page, index, algorithms, source code, and output - formatted and
+              print-ready. (For all colleges)
+            </p>
+
+            <div className="lp-feature-tags">
+              {FEATURES.map(function (f) {
+                return <span key={f} className="lp-feature-tag">{f}</span>;
+              })}
+            </div>
+
+            <div className="lp-hero-actions">
+              <button className="btn-primary-lg" onClick={function () { navigate("/create"); }}>
+                Generate my file
+              </button>
+              <button className="btn-ghost-lg" onClick={function () { setShowSample(true); }}>
+                View sample PDF
+              </button>
+            </div>
           </div>
 
-          <div className="lp-hero-actions">
-            <button className="btn-primary-lg" onClick={function() { navigate("/create"); }}>
-              Generate my file
-            </button>
-            <button className="btn-ghost-lg" onClick={function() { setShowSample(true); }}>
-              View sample PDF
-            </button>
-          </div>
+          {/* RIGHT — app mockup hidden on mobile */}
+          {!isMobile && (
+            <div style={{
+              flex: "1 1 600px",
+              minWidth: 0,
+              maxWidth: 700,
+              marginLeft: "350px",
+            }}>
+              <AppMockup />
+            </div>
+          )}
+
         </div>
       </section>
 
+      {/* ── HOW IT WORKS ─────────────────────────────── */}
       <section className="lp-section" id="how">
         <div className="lp-section-label">// how_it_works</div>
         <h2 className="lp-section-title">Four steps to a complete submission</h2>
         <p className="lp-section-sub">No formatting, no typing - just your details and we handle the rest</p>
         <div className="lp-steps">
-          {HOW_STEPS.map(function(s) {
+          {HOW_STEPS.map(function (s) {
             return (
               <div key={s.num} className="lp-step-card">
                 <span className="lp-step-num" style={{ color: "#3b82f6" }}>{s.num}</span>
@@ -282,12 +334,13 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FEATURES ─────────────────────────────────── */}
       <section className="lp-section" id="templates">
         <div className="lp-section-label">// everything_in_one_file</div>
         <h2 className="lp-section-title">Everything in one file</h2>
         <p className="lp-section-sub">Your lab file, exactly how your professor expects it</p>
         <div className="lp-features-grid">
-          {FEATURE_CARDS.map(function(f) {
+          {FEATURE_CARDS.map(function (f) {
             return (
               <div key={f.title} className="lp-feature-card">
                 <span className="lp-feature-icon">{f.icon}</span>
@@ -299,13 +352,14 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── CTA BANNER ───────────────────────────────── */}
       <section className="lp-cta-banner">
         <div className="lp-cta-content">
           <div>
             <h2 className="lp-cta-title">Ready to stop formatting manually?</h2>
             <p className="lp-cta-sub">Takes less than 5 minutes. No account required to try.</p>
           </div>
-          <button className="btn-primary-lg" onClick={function() { navigate("/create"); }}>
+          <button className="btn-primary-lg" onClick={function () { navigate("/create"); }}>
             Generate my lab file
           </button>
         </div>
