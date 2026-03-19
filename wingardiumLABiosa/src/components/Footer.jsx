@@ -20,7 +20,6 @@ const FOOTER_COLS = [
   {
     heading: "CONNECT",
     links: [
-      { label: "GitHub", href: "https://github.com/bhavyaa1801", external: true },
       { label: "LinkedIn", href: "https://www.linkedin.com/in/bhavyarajput/?skipRedirect=true", external: true },
       { label: "Report a bug", href: "https://forms.gle/C7aKtZbgXKRXykX88" },
 
