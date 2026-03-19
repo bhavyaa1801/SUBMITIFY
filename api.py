@@ -464,6 +464,9 @@ async def generate(request: Request, req: GenerateRequest):
     )
     return {"experiments": experiments}
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 @app.post("/api/generate-pdf")
 @limiter.limit("5/minute")
