@@ -16,59 +16,45 @@ def get_connection():
 
 # SUBJECT
 def get_subject_id(subject_name):
+    subject_name = subject_name.strip().lower()  # normalize
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT id FROM subjects WHERE name=%s",
-        (subject_name,)
-    )
-
+    cur.execute("SELECT id FROM subjects WHERE LOWER(name)=%s", (subject_name,))
     row = cur.fetchone()
 
     if row:
         subject_id = row[0]
     else:
-        cur.execute(
-            "INSERT INTO subjects(name) VALUES(%s) RETURNING id",
-            (subject_name,)
-        )
+        cur.execute("INSERT INTO subjects(name) VALUES(%s) RETURNING id", (subject_name,))
         subject_id = cur.fetchone()[0]
         conn.commit()
 
     cur.close()
     conn.close()
-
     return subject_id
 
 
 # LANGUAGE
 def get_language_id(language_name):
+    language_name = language_name.strip().lower()  # normalize
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT id FROM languages WHERE name=%s",
-        (language_name,)
-    )
-
+    cur.execute("SELECT id FROM languages WHERE LOWER(name)=%s", (language_name,))
     row = cur.fetchone()
 
     if row:
         language_id = row[0]
     else:
-        cur.execute(
-            "INSERT INTO languages(name) VALUES(%s) RETURNING id",
-            (language_name,)
-        )
+        cur.execute("INSERT INTO languages(name) VALUES(%s) RETURNING id", (language_name,))
         language_id = cur.fetchone()[0]
         conn.commit()
 
     cur.close()
     conn.close()
-
     return language_id
 
 

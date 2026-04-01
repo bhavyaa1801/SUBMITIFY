@@ -5,10 +5,10 @@ export default function StepExperiments({ data, update, onBack, onNext }) {
 
   const parseQuestions = (text) => {
   return text
-    .split(/(?=(?:Q\s*)?\d+[.)]\s*)/i)  // \s* instead of \s — space is optional
+    .split(/(?<!\d)(?=(?:Q\s*)?\d+[.)]\s*)/i)
     .map((chunk) => chunk.replace(/^(?:Q\s*)?\d+[.)]\s*/i, "").trim())
     .filter(Boolean);
-  };
+};
 
   const addExperiments = () => {
     const questions = parseQuestions(bulkInput);

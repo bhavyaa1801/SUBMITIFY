@@ -6,7 +6,7 @@ const GEN_STEPS = [
   "Calling generate_experiments()...",
   "Writing experiment pages...",
   "Formatting PDF...",
-  "Done!",
+  "please wait generating may take 10-12 minutes (may depend on the number os ques)",
 ];
 
 export function GeneratingScreen() {

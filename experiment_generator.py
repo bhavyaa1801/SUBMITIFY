@@ -1,6 +1,7 @@
 import os
 import yaml
 import re
+import time
 from groq import Groq
 
 from db import (
@@ -11,6 +12,8 @@ from db import (
 )
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+BATCH_SIZE = 2 
 
 
 def get_language_hints(language):
@@ -79,36 +82,26 @@ def parse_yaml_safe(text, count):
     except Exception as e:
         print("YAML attempt 3 failed:", e)
 
-
     return []
 
 
-def generate_experiments(questions, language, subject):
+def sanitize_experiment(exp, question, language):
+    """Ensure all required keys exist with fallback values."""
+    return {
+        "aim":       exp.get("aim",       question),
+        "algorithm": exp.get("algorithm", "Could not generate. Please regenerate."),
+        "code":      exp.get("code",      f"// Could not generate {language} code"),
+        "output":    exp.get("output",    "N/A"),
+        "result":    exp.get("result",    "N/A"),
+    }
 
-    subject_id = get_subject_id(subject)
-    language_id = get_language_id(language)
 
-    experiments = []
-    questions_to_generate = []
+def generate_batch(batch_questions, language, lang_hints):
+    """Call Groq for a single batch of questions. Returns list of experiment dicts."""
 
-    # STEP 1: CHECK DATABASE FIRST
-    for q in questions:
-        cached = get_experiment(q, subject_id, language_id)
-        if cached:
-            print(f"Found in database: {q}")
-            cached["name"] = q
-            experiments.append(cached)
-        else:
-            print(f"Generating using AI: {q}")
-            questions_to_generate.append(q)
+    question_list = "\n".join(f"{i+1}. {q}" for i, q in enumerate(batch_questions))
 
-    # STEP 2: CALL AI ONLY FOR MISSING QUESTIONS
-    if questions_to_generate:
-
-        lang_hints = get_language_hints(language)
-        question_list = "\n".join(f"{i+1}. {q}" for i, q in enumerate(questions_to_generate))
-
-        prompt = f"""You are a programming practical file generator.
+    prompt = f"""You are a programming practical file generator.
 Generate practical experiments for each question in {language}.
 
 Language instructions: {lang_hints}
@@ -116,7 +109,7 @@ Language instructions: {lang_hints}
 Questions:
 {question_list}
 
-Return ONLY a YAML list with exactly {len(questions_to_generate)} items.
+Return ONLY a YAML list with exactly {len(batch_questions)} items.
 Each item must have these exact keys: aim, algorithm, code, output, result
 
 STRICT RULES:
@@ -139,62 +132,104 @@ Format:
     short result here
 """
 
-        try:
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            f"You generate YAML only for {language} programming experiments. "
-                            "No markdown. No code fences. No explanations. "
-                            "Always use literal block scalars (|) for code and multiline fields."
-                        )
-                    },
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1,
-            )
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    f"You generate YAML only for {language} programming experiments. "
+                    "No markdown. No code fences. No explanations. "
+                    "Always use literal block scalars (|) for code and multiline fields. "
+                    "Always return ALL fields: aim, algorithm, code, output, result for every experiment."
+                )
+            },
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.1,
+        max_tokens=6000,  # near model max — never truncates
+    )
 
-            text = response.choices[0].message.content.strip()
-            text = clean_yaml_text(text)
+    text = response.choices[0].message.content.strip()
+    text = clean_yaml_text(text)
+
+    parsed = parse_yaml_safe(text, len(batch_questions))
+    return parsed
 
 
-            new_experiments = parse_yaml_safe(text, len(questions_to_generate))
+def generate_experiments(questions, language, subject):
 
-            if not new_experiments:
-                raise ValueError("No experiments parsed from AI response")
+    subject_id  = get_subject_id(subject)
+    language_id = get_language_id(language)
 
-            # Pad if Groq returned fewer than expected
-            while len(new_experiments) < len(questions_to_generate):
-                new_experiments.append({
-                    "aim": questions_to_generate[len(new_experiments)],
-                    "algorithm": "Could not generate. Please regenerate.",
-                    "code": f"-- Could not generate {language} code",
-                    "output": "N/A",
-                    "result": "N/A",
-                })
+    # Preserve original order using a dict
+    result_map = {}
+    questions_to_generate = []
 
-            for q, exp in zip(questions_to_generate, new_experiments):
-                exp["name"] = q
-                save_experiment(q, subject_id, language_id, exp)
-                experiments.append(exp)
+    # ── STEP 1: Check DB cache ────────────────────────────
+    for q in questions:
+        cached = get_experiment(q, subject_id, language_id)
+        if cached:
+            print(f"Found in database: {q}")
+            cached["name"]      = q
+            cached["aim"]       = cached.get("aim",       q)
+            cached["algorithm"] = cached.get("algorithm", "")
+            cached["code"]      = cached.get("code",      "")
+            cached["output"]    = cached.get("output",    "N/A")
+            cached["result"]    = cached.get("result",    "N/A")
+            result_map[q] = cached
+        else:
+            print(f"Generating using AI: {q}")
+            questions_to_generate.append(q)
 
-        except Exception as e:
-            print("Generation failed:", e)
-            # Return placeholders so PDF still generates
-            for q in questions_to_generate:
-                experiments.append({
-                    "name": q,
-                    "aim": q,
-                    "algorithm": "Could not generate. Please regenerate.",
-                    "code": f"-- Could not generate {language} code",
-                    "output": "N/A",
-                    "result": "N/A",
-                })
+    # ── STEP 2: Generate missing ones in batches ──────────
+    if questions_to_generate:
+        lang_hints = get_language_hints(language)
 
-    # ADD EXPERIMENT NUMBERS
-    for i, exp in enumerate(experiments, 1):
+        for batch_start in range(0, len(questions_to_generate), BATCH_SIZE):
+            batch = questions_to_generate[batch_start : batch_start + BATCH_SIZE]
+            print(f"Generating batch {batch_start // BATCH_SIZE + 1}: {len(batch)} experiments")
+
+            try:
+                parsed = generate_batch(batch, language, lang_hints)
+
+                # Pad if Groq returned fewer items than expected
+                while len(parsed) < len(batch):
+                    parsed.append({})
+
+                for q, exp in zip(batch, parsed):
+                    exp = sanitize_experiment(exp, q, language)
+                    exp["name"] = q
+                    save_experiment(q, subject_id, language_id, exp)
+                    result_map[q] = exp
+
+            except Exception as e:
+                print(f"Batch generation failed: {e}")
+                # Fallback placeholders for this batch
+                for q in batch:
+                    fallback = {
+                        "name":      q,
+                        "aim":       q,
+                        "algorithm": "Could not generate. Please regenerate.",
+                        "code":      f"// Could not generate {language} code",
+                        "output":    "N/A",
+                        "result":    "N/A",
+                    }
+                    result_map[q] = fallback
+            time.sleep(2) 
+
+    # ── STEP 3: Rebuild in original order ─────────────────
+    experiments = []
+    for i, q in enumerate(questions, 1):
+        exp = result_map.get(q, {
+            "name":      q,
+            "aim":       q,
+            "algorithm": "Could not generate. Please regenerate.",
+            "code":      f"// Could not generate {language} code",
+            "output":    "N/A",
+            "result":    "N/A",
+        })
         exp["number"] = i
+        experiments.append(exp)
 
     return experiments
