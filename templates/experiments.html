@@ -4,20 +4,54 @@
 
 <h1>Experiment {{ exp.number }}</h1>
 
-<h2>Aim</h2>
-<p>{{ exp.aim }}</p>
+{% for field, value in exp.content.items() %}
 
-<h2>Algorithm</h2>
-<pre class="algorithm">{{ exp.algorithm }}</pre>
+    {% if field == "aim" %}
+        <h2>Aim</h2>
+        <p>{{ value }}</p>
 
-<h2>Program</h2>
-<pre class="code">{{ exp.code | e}}</pre>
+    {% elif field == "algorithm" %}
+        <h2>Algorithm</h2>
+        <pre class="algorithm">{{ value }}</pre>
 
-<h2>Output</h2>
-<pre class="output">{{ exp.output }}</pre>
+    {% elif field == "code" %}
+        <h2>Program</h2>
+        <pre class="code">{{ value | e }}</pre>
 
-<!-- <h2>Result</h2>
-<p>{{ exp.result }}</p> -->
+    {% elif field == "output" or field == "commands" %}
+        <h2>Output</h2>
+        <pre class="output">{{ value }}</pre>
+
+    {% elif field == "procedure" %}
+        <h2>Procedure</h2>
+        <pre class="algorithm">{{ value }}</pre>
+
+    {% elif field == "theory" %}
+        <h2>Theory</h2>
+        <p>{{ value }}</p>
+
+    {% elif field == "truth_table" %}
+        <h2>Truth Table</h2>
+        <pre class="algorithm">{{ value }}</pre>
+
+    {% elif field == "observation" %}
+        <h2>Observation</h2>
+        <pre class="output">{{ value }}</pre>
+
+    {% elif field == "diagram_placeholder" %}
+        <h2>Circuit Diagram</h2>
+        <div class="diagram-box">
+            <p>[ INSERT CIRCUIT DIAGRAM HERE ]</p>
+            <p>Paste your Proteus / Logisim / simulator screenshot here</p>
+        </div>
+
+    {% elif field == "result" %}
+        <h2>Result</h2>
+        <p>{{ value }}</p>
+
+    {% endif %}
+
+{% endfor %}
 
 </div>
 

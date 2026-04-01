@@ -64,7 +64,7 @@ class ProjectInfo(BaseModel):
 
 class GenerateRequest(BaseModel):
     project:   ProjectInfo
-    language:  str = Field(..., max_length=50)
+    language:  str | None = Field(None, max_length=50)
     questions: List[str] = Field(..., max_length=25)
 
 
@@ -155,12 +155,7 @@ def build_docx(project, experiments, docx_path):
     style = doc.styles["Normal"]
     style.font.name = "Calibri"
     style.font.size = Pt(11)
-
-    # ════════════════════════════════════════════════════
     # COVER PAGE
-    # ════════════════════════════════════════════════════
-
-
 
     # University name
     univ_para = doc.add_paragraph()
@@ -256,6 +251,105 @@ def build_docx(project, experiments, docx_path):
             tcBorders.append(b)
         tcPr.append(tcBorders)
         set_cell_margins(cell, top=80, bottom=80, left=0, right=0)
+        FIELD_LABELS = {
+        "aim":                 ("Aim",             "text"),
+        "algorithm":           ("Algorithm",       "code_block"),
+        "code":                ("Program",         "mono"),
+        "output":              ("Output",          "mono"),
+        "procedure":           ("Procedure",       "code_block"),
+        "commands":            ("Commands",        "mono"),
+        "theory":              ("Theory",          "text"),
+        "truth_table":         ("Truth Table",     "mono"),
+        "observation":         ("Observation",     "text"),
+        "result":              ("Result",          "text"),
+        "diagram_placeholder": ("Circuit Diagram", "placeholder"),
+    }
+
+    for i, exp in enumerate(experiments, 1):
+        name = exp.get("name", f"Experiment {i}")
+
+        # "Experiment N" heading
+        exp_para = doc.add_paragraph()
+        exp_run = exp_para.add_run(f"Experiment {i}")
+        exp_run.bold = True
+        exp_run.font.size = Pt(14)
+        exp_run.font.color.rgb = RGBColor(0, 0, 0)
+        exp_para.paragraph_format.space_after = Pt(2)
+
+        # Experiment name
+        name_para = doc.add_paragraph()
+        name_run = name_para.add_run(name.title())
+        name_run.bold = True
+        name_run.font.size = Pt(12)
+        name_run.font.color.rgb = RGBColor(0, 0, 0)
+        name_para.paragraph_format.space_after = Pt(6)
+
+        # Dynamic sections
+        content = exp.get("content", {})
+        for key, value in content.items():
+            if key not in FIELD_LABELS:
+                continue
+
+            label, render_type = FIELD_LABELS[key]
+            value = value.strip() if value else ""
+
+            # Section label
+            lbl_para = doc.add_paragraph()
+            lbl_run = lbl_para.add_run(label)
+            lbl_run.bold = True
+            lbl_run.font.size = Pt(11)
+            lbl_run.font.color.rgb = RGBColor(0, 0, 0)
+            lbl_para.paragraph_format.space_before = Pt(8)
+            lbl_para.paragraph_format.space_after = Pt(3)
+
+            if render_type == "placeholder":
+                diag_para = doc.add_paragraph()
+                diag_para.paragraph_format.space_before = Pt(4)
+                diag_para.paragraph_format.space_after = Pt(4)
+                diag_run = diag_para.add_run(
+                    "[ INSERT CIRCUIT DIAGRAM HERE ]\n"
+                    "Paste your Proteus / Logisim / simulator screenshot here"
+                )
+                diag_run.font.size = Pt(11)
+                diag_run.font.color.rgb = RGBColor(150, 150, 150)
+                pPr = diag_para._p.get_or_add_pPr()
+                pBdr = OxmlElement("w:pBdr")
+                for side in ["top", "left", "bottom", "right"]:
+                    border = OxmlElement(f"w:{side}")
+                    border.set(qn("w:val"), "dashed")
+                    border.set(qn("w:sz"), "6")
+                    border.set(qn("w:space"), "4")
+                    border.set(qn("w:color"), "AAAAAA")
+                    pBdr.append(border)
+                pPr.append(pBdr)
+                diag_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            elif render_type in ("mono", "code_block"):
+                for line in value.splitlines():
+                    line = line.strip() if render_type == "code_block" else line
+                    if render_type == "code_block" and not line:
+                        continue
+                    p = doc.add_paragraph()
+                    p.paragraph_format.space_before = Pt(0)
+                    p.paragraph_format.space_after = Pt(0 if render_type == "mono" else 2)
+                    p.paragraph_format.left_indent = Inches(0.2)
+                    r = p.add_run(line if line else " ")
+                    r.font.name = "Times New Roman"
+                    r.font.size = Pt(9.5 if render_type == "mono" else 11)
+                    r.font.color.rgb = RGBColor(0, 0, 0)
+
+            else:  # plain text
+                p = doc.add_paragraph()
+                p.paragraph_format.space_after = Pt(4)
+                p.paragraph_format.left_indent = Inches(0.2)
+                r = p.add_run(value)
+                r.font.size = Pt(11)
+                r.font.color.rgb = RGBColor(0, 0, 0)
+
+        # Page break AFTER each experiment, OUTSIDE the field loop
+        doc.add_page_break()
+
+    doc.save(docx_path)
 
     def add_cover_line(cell, label, value, align=WD_ALIGN_PARAGRAPH.LEFT):
         p = cell.add_paragraph()
@@ -282,9 +376,7 @@ def build_docx(project, experiments, docx_path):
 
     doc.add_page_break()
 
-    # ════════════════════════════════════════════════════
     # INDEX PAGE
-    # ════════════════════════════════════════════════════
 
     idx_heading = doc.add_paragraph()
     idx_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -332,9 +424,7 @@ def build_docx(project, experiments, docx_path):
 
     doc.add_page_break()
 
-    # ════════════════════════════════════════════════════
     # EXPERIMENT PAGES
-    # ════════════════════════════════════════════════════
 
     for i, exp in enumerate(experiments, 1):
         name = exp.get("name", f"Experiment {i}")
@@ -355,67 +445,8 @@ def build_docx(project, experiments, docx_path):
         name_run.font.color.rgb = RGBColor(0, 0, 0)
         name_para.paragraph_format.space_after = Pt(6)
 
-        sections = [
-            ("aim",       "Aim"),
-            ("algorithm", "Algorithm"),
-            ("code",      "Program"),
-            ("output",    "Output"),
-            ("result",    "Result"),
-        ]
-
-        for key, label in sections:
-            content = exp.get(key, "").strip()
-            if not content:
-                continue
-
-            # Section label
-            lbl_para = doc.add_paragraph()
-            lbl_run = lbl_para.add_run(label)
-            lbl_run.bold = True
-            lbl_run.font.size = Pt(11)
-            lbl_run.font.color.rgb = RGBColor(0, 0, 0)
-            lbl_para.paragraph_format.space_before = Pt(8)
-            lbl_para.paragraph_format.space_after = Pt(3)
-
-            if key == "code":
-                # Plain monospace, no background
-                for line in content.splitlines():
-                    code_para = doc.add_paragraph()
-                    code_para.paragraph_format.space_before = Pt(0)
-                    code_para.paragraph_format.space_after = Pt(0)
-                    code_para.paragraph_format.left_indent = Inches(0.2)
-                    code_run = code_para.add_run(line if line else " ")
-                    code_run.font.name = "Times New Roman"
-                    code_run.font.size = Pt(9.5)
-                    code_run.font.color.rgb = RGBColor(0, 0, 0)
-
-            elif key == "algorithm":
-                for line in content.splitlines():
-                    line = line.strip()
-                    if not line:
-                        continue
-                    alg_para = doc.add_paragraph()
-                    alg_para.paragraph_format.space_before = Pt(0)
-                    alg_para.paragraph_format.space_after = Pt(2)
-                    alg_para.paragraph_format.left_indent = Inches(0.2)
-                    alg_run = alg_para.add_run(line)
-                    alg_run.font.size = Pt(11)
-                    alg_run.font.color.rgb = RGBColor(0, 0, 0)
-
-            else:
-                content_para = doc.add_paragraph()
-                content_para.paragraph_format.space_after = Pt(4)
-                content_para.paragraph_format.left_indent = Inches(0.2)
-                content_run = content_para.add_run(content)
-                content_run.font.size = Pt(11)
-                content_run.font.color.rgb = RGBColor(0, 0, 0)
-                if key == "output":
-                    content_run.font.name = "Times New Roman"
-                    content_run.font.size = Pt(10)
-
-        doc.add_page_break()
-
-    doc.save(docx_path)
+        # Dynamic sections from exp.content
+ 
 
 def sanitize(value: str) -> str:
     """Strip leading/trailing whitespace and escape HTML special characters."""
